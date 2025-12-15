@@ -126,6 +126,18 @@
       box-shadow: 0 0 12px rgba(56,189,248,.8);
       transition: width .6s ease;
     }
+
+    select {
+      margin-top: 10px;
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      background: #020617;
+      color: #e5e7eb;
+      border: 1px solid #334155;
+      box-shadow: 0 0 12px rgba(168,85,247,.4);
+      font-size: 15px;
+    }
   </style>
 </head>
 
@@ -136,16 +148,26 @@
   </header>
 
   <div class="container">
+
     <!-- STATUS -->
     <div class="card">
       <h3>Status</h3>
       <div id="status" class="stat pulse">Loading…</div>
     </div>
 
-    <!-- STRATEGY -->
+    <!-- STRATEGY (STEP 7.4) -->
     <div class="card">
       <h3>Strategy</h3>
-      <div class="stat">Normal User</div>
+
+      <select id="strategySelect">
+        <option value="slow">Slow & Careful</option>
+        <option value="normal">Normal User</option>
+        <option value="aggressive">Aggressive</option>
+      </select>
+
+      <div id="strategyStatus" class="stat" style="font-size:14px;margin-top:10px;">
+        —
+      </div>
     </div>
 
     <!-- STEALTH -->
@@ -154,7 +176,7 @@
       <div class="stat">8 Plugins Enabled</div>
     </div>
 
-    <!-- DAILY USAGE (STEP 7.3) -->
+    <!-- DAILY USAGE -->
     <div class="card">
       <h3>Daily Usage</h3>
       <div id="usageText" class="stat">—</div>
@@ -162,6 +184,7 @@
         <div id="usageBar" class="progress-bar"></div>
       </div>
     </div>
+
   </div>
 
   <script>
@@ -195,6 +218,35 @@
 
         document.getElementById('usageBar').style.width = percent + '%';
       });
+
+    // ---------------- STRATEGY ----------------
+    const strategySelect = document.getElementById('strategySelect');
+    const strategyStatus = document.getElementById('strategyStatus');
+
+    fetch('/api/strategy')
+      .then(r => r.json())
+      .then(d => {
+        strategySelect.value = d.strategy;
+        strategyStatus.innerText = `Active: ${d.strategy.toUpperCase()}`;
+        strategyStatus.style.color = '#34d399';
+      });
+
+    strategySelect.addEventListener('change', () => {
+      fetch('/api/strategy/set', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ strategy: strategySelect.value })
+      })
+      .then(r => r.json())
+      .then(d => {
+        strategyStatus.innerText = `Active: ${d.strategy.toUpperCase()}`;
+        strategyStatus.style.color = '#34d399';
+      })
+      .catch(() => {
+        strategyStatus.innerText = 'Update failed';
+        strategyStatus.style.color = '#f87171';
+      });
+    });
   </script>
 </body>
 </html>
