@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+    "time"
 
 	"github.com/Siddharth-Mishra-23/linkedin-automation-lab/internal/browser"
 	"github.com/Siddharth-Mishra-23/linkedin-automation-lab/internal/stealth"
@@ -18,6 +19,17 @@ func main() {
 	stealthEngine.Register(&stealth.MouseMovementPlugin{})
 	stealthEngine.Register(&stealth.TimingPlugin{})
 	stealthEngine.Register(&stealth.FingerprintPlugin{})
+	stealthEngine.Register(&stealth.ScrollPlugin{})
+	stealthEngine.Register(&stealth.TypingPlugin{})
+	stealthEngine.Register(&stealth.HoverPlugin{})
+	stealthEngine.Register(&stealth.SchedulePlugin{
+		StartHour: 9,
+		EndHour:   18,
+	})
+	stealthEngine.Register(&stealth.RateLimitPlugin{
+		Delay: 800 * time.Millisecond,
+	})
+
 
 	if err := stealthEngine.ApplyAll(ctx); err != nil {
 		fmt.Println("Stealth engine failed:", err)
