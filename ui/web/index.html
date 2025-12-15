@@ -111,6 +111,21 @@
       50% { opacity: 1; }
       100% { opacity: .7; }
     }
+
+    .progress-bg {
+      margin-top: 12px;
+      background: #020617;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 10px;
+      width: 0%;
+      background: linear-gradient(90deg, #34d399, #38bdf8);
+      box-shadow: 0 0 12px rgba(56,189,248,.8);
+      transition: width .6s ease;
+    }
   </style>
 </head>
 
@@ -121,23 +136,36 @@
   </header>
 
   <div class="container">
+    <!-- STATUS -->
     <div class="card">
       <h3>Status</h3>
       <div id="status" class="stat pulse">Loading…</div>
     </div>
 
+    <!-- STRATEGY -->
     <div class="card">
       <h3>Strategy</h3>
       <div class="stat">Normal User</div>
     </div>
 
+    <!-- STEALTH -->
     <div class="card">
       <h3>Stealth</h3>
       <div class="stat">8 Plugins Enabled</div>
     </div>
+
+    <!-- DAILY USAGE (STEP 7.3) -->
+    <div class="card">
+      <h3>Daily Usage</h3>
+      <div id="usageText" class="stat">—</div>
+      <div class="progress-bg">
+        <div id="usageBar" class="progress-bar"></div>
+      </div>
+    </div>
   </div>
 
   <script>
+    // ---------------- STATUS ----------------
     const statusEl = document.getElementById('status');
 
     fetch('/api/health')
@@ -151,6 +179,21 @@
         statusEl.innerText = 'OFFLINE';
         statusEl.style.color = '#f87171';
         statusEl.style.textShadow = '0 0 12px rgba(248,113,113,.8)';
+      });
+
+    // ---------------- DAILY STATS ----------------
+    fetch('/api/stats')
+      .then(res => res.json())
+      .then(s => {
+        const percent = Math.min(
+          100,
+          Math.round((s.actions / s.max_actions) * 100)
+        );
+
+        document.getElementById('usageText').innerText =
+          `${s.actions} / ${s.max_actions} actions today`;
+
+        document.getElementById('usageBar').style.width = percent + '%';
       });
   </script>
 </body>
