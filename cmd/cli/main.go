@@ -34,9 +34,16 @@ func main() {
 	sched.WaitUntilAllowed()
 
 	// -------------------------------------------------
-	// State Tracking (Daily Limits)
+	// Persistent State Tracking (Daily Limits)
 	// -------------------------------------------------
-	stateTracker := state.New(activeProfile.MaxActionsPerDay)
+	stateTracker, err := state.NewPersistent(
+		activeProfile.MaxActionsPerDay,
+		"state.json",
+	)
+	if err != nil {
+		fmt.Println("Failed to load persistent state:", err)
+		return
+	}
 
 	if !stateTracker.CanPerform() {
 		fmt.Println("[State] Daily action limit reached")
@@ -45,7 +52,11 @@ func main() {
 
 	// Strategy-based delay before action
 	time.Sleep(activeProfile.MinDelay)
-	stateTracker.RecordAction()
+
+	if err := stateTracker.RecordAction(); err != nil {
+		fmt.Println("Failed to record action:", err)
+		return
+	}
 
 	// -------------------------------------------------
 	// Stealth Engine (Anti-Detection)

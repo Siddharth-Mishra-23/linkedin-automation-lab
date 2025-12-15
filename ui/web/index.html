@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LinkedIn Automation Lab</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background: radial-gradient(circle at top, #0f172a, #020617);
+      color: #e5e7eb;
+    }
+    header {
+      padding: 20px;
+      border-bottom: 1px solid #1f2933;
+      box-shadow: 0 0 20px rgba(56,189,248,.15);
+    }
+    h1 {
+      margin: 0;
+      color: #38bdf8;
+      text-shadow: 0 0 12px rgba(56,189,248,.6);
+    }
+    .container {
+      padding: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: rgba(2,6,23,.85);
+      border: 1px solid #1f2937;
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 0 30px rgba(168,85,247,.12);
+    }
+    .card h3 {
+      margin-top: 0;
+      color: #a855f7;
+    }
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #022c22;
+      color: #34d399;
+      font-size: 12px;
+      box-shadow: 0 0 10px rgba(52,211,153,.4);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>LinkedIn Automation Lab</h1>
+    <span class="badge">Educational Mode</span>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <h3>Status</h3>
+      <p id="status">Loading…</p>
+    </div>
+
+    <div class="card">
+      <h3>Strategy</h3>
+      <p>Normal User</p>
+    </div>
+
+    <div class="card">
+      <h3>Stealth</h3>
+      <p>8 plugins enabled</p>
+    </div>
+  </div>
+
+  <script>
+    fetch('/api/health')
+      .then(r => r.json())
+      .then(d => {
+        document.getElementById('status').innerText = d.status;
+      })
+      .catch(() => {
+        document.getElementById('status').innerText = 'offline';
+      });
+  </script>
+</body>
+</html>
