@@ -22,7 +22,6 @@
       overflow-x: hidden;
     }
 
-    /* ---------------- HEADER ---------------- */
     header {
       padding: 22px 28px;
       border-bottom: 1px solid #1f2937;
@@ -62,7 +61,6 @@
       box-shadow: 0 0 14px rgba(52,211,153,.45);
     }
 
-    /* ---------------- LAYOUT ---------------- */
     .container {
       padding: 28px;
       display: grid;
@@ -79,19 +77,11 @@
       box-shadow:
         0 0 35px rgba(168,85,247,.15),
         inset 0 0 20px rgba(56,189,248,.05);
-      transition: transform .3s ease, box-shadow .3s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-4px) scale(1.01);
-      box-shadow:
-        0 0 45px rgba(168,85,247,.35),
-        inset 0 0 25px rgba(56,189,248,.1);
     }
 
     .card h3 {
       margin-top: 0;
-      margin-bottom: 6px;
+      margin-bottom: 10px;
       color: var(--neon-purple);
       text-shadow: 0 0 10px rgba(168,85,247,.6);
     }
@@ -99,17 +89,25 @@
     .stat {
       font-size: 22px;
       font-weight: 600;
-      margin-top: 8px;
     }
 
-    .pulse {
-      animation: pulse 2.5s infinite;
+    select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      background: #020617;
+      color: #e5e7eb;
+      border: 1px solid #334155;
+      box-shadow: 0 0 12px rgba(168,85,247,.4);
+      font-size: 15px;
     }
 
-    @keyframes pulse {
-      0% { opacity: .7; }
-      50% { opacity: 1; }
-      100% { opacity: .7; }
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 14px;
     }
 
     .progress-bg {
@@ -127,126 +125,157 @@
       transition: width .6s ease;
     }
 
-    select {
-      margin-top: 10px;
-      width: 100%;
-      padding: 10px;
-      border-radius: 10px;
+    pre {
+      margin: 0;
       background: #020617;
-      color: #e5e7eb;
-      border: 1px solid #334155;
-      box-shadow: 0 0 12px rgba(168,85,247,.4);
-      font-size: 15px;
+      padding: 12px;
+      border-radius: 12px;
+      height: 220px;
+      overflow-y: auto;
+      font-size: 13px;
+      color: #34d399;
+      box-shadow: inset 0 0 12px rgba(52,211,153,.2);
     }
   </style>
 </head>
 
 <body>
-  <header>
-    <h1>LinkedIn Automation Lab</h1>
-    <span class="badge">Educational Mode</span>
-  </header>
+<header>
+  <h1>LinkedIn Automation Lab</h1>
+  <span class="badge">Educational Mode</span>
+</header>
 
-  <div class="container">
+<div class="container">
 
-    <!-- STATUS -->
-    <div class="card">
-      <h3>Status</h3>
-      <div id="status" class="stat pulse">Loading…</div>
-    </div>
-
-    <!-- STRATEGY (STEP 7.4) -->
-    <div class="card">
-      <h3>Strategy</h3>
-
-      <select id="strategySelect">
-        <option value="slow">Slow & Careful</option>
-        <option value="normal">Normal User</option>
-        <option value="aggressive">Aggressive</option>
-      </select>
-
-      <div id="strategyStatus" class="stat" style="font-size:14px;margin-top:10px;">
-        —
-      </div>
-    </div>
-
-    <!-- STEALTH -->
-    <div class="card">
-      <h3>Stealth</h3>
-      <div class="stat">8 Plugins Enabled</div>
-    </div>
-
-    <!-- DAILY USAGE -->
-    <div class="card">
-      <h3>Daily Usage</h3>
-      <div id="usageText" class="stat">—</div>
-      <div class="progress-bg">
-        <div id="usageBar" class="progress-bar"></div>
-      </div>
-    </div>
-
+  <!-- STATUS -->
+  <div class="card">
+    <h3>Status</h3>
+    <div id="status" class="stat">Loading…</div>
   </div>
 
-  <script>
-    // ---------------- STATUS ----------------
-    const statusEl = document.getElementById('status');
+  <!-- STRATEGY -->
+  <div class="card">
+    <h3>Strategy</h3>
+    <select id="strategySelect">
+      <option value="slow">Slow & Careful</option>
+      <option value="normal">Normal User</option>
+      <option value="aggressive">Aggressive</option>
+    </select>
+    <div id="strategyStatus" style="margin-top:8px;font-size:14px;"></div>
+  </div>
 
-    fetch('/api/health')
-      .then(res => res.json())
-      .then(data => {
-        statusEl.innerText = data.status.toUpperCase();
-        statusEl.style.color = '#34d399';
-        statusEl.style.textShadow = '0 0 12px rgba(52,211,153,.8)';
-      })
-      .catch(() => {
-        statusEl.innerText = 'OFFLINE';
-        statusEl.style.color = '#f87171';
-        statusEl.style.textShadow = '0 0 12px rgba(248,113,113,.8)';
-      });
+  <!-- STEALTH -->
+  <div class="card">
+    <h3>Stealth Plugins</h3>
+    <div id="stealthList"></div>
+  </div>
 
-    // ---------------- DAILY STATS ----------------
-    fetch('/api/stats')
-      .then(res => res.json())
-      .then(s => {
-        const percent = Math.min(
-          100,
-          Math.round((s.actions / s.max_actions) * 100)
-        );
+  <!-- DAILY USAGE -->
+  <div class="card">
+    <h3>Daily Usage</h3>
+    <div id="usageText" class="stat">—</div>
+    <div class="progress-bg">
+      <div id="usageBar" class="progress-bar"></div>
+    </div>
+  </div>
 
-        document.getElementById('usageText').innerText =
-          `${s.actions} / ${s.max_actions} actions today`;
+  <!-- LIVE LOGS (STEP 7.6) -->
+  <div class="card" style="grid-column:1 / -1;">
+    <h3>Live Logs</h3>
+    <pre id="logsBox">Loading logs…</pre>
+  </div>
 
-        document.getElementById('usageBar').style.width = percent + '%';
-      });
+</div>
 
-    // ---------------- STRATEGY ----------------
-    const strategySelect = document.getElementById('strategySelect');
-    const strategyStatus = document.getElementById('strategyStatus');
+<script>
+/* -------- STATUS -------- */
+fetch('/api/health')
+  .then(r => r.json())
+  .then(d => {
+    const el = document.getElementById('status');
+    el.innerText = d.status.toUpperCase();
+    el.style.color = '#34d399';
+  });
 
-    fetch('/api/strategy')
-      .then(r => r.json())
-      .then(d => {
-        strategySelect.value = d.strategy;
-        strategyStatus.innerText = `Active: ${d.strategy.toUpperCase()}`;
-        strategyStatus.style.color = '#34d399';
-      });
+/* -------- DAILY STATS -------- */
+fetch('/api/stats')
+  .then(r => r.json())
+  .then(s => {
+    document.getElementById('usageText').innerText =
+      `${s.actions} / ${s.max_actions} actions today`;
+    document.getElementById('usageBar').style.width =
+      Math.round((s.actions / s.max_actions) * 100) + '%';
+  });
 
-    strategySelect.addEventListener('change', () => {
-      fetch('/api/strategy/set', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ strategy: strategySelect.value })
-      })
-      .then(r => r.json())
-      .then(d => {
-        strategyStatus.innerText = `Active: ${d.strategy.toUpperCase()}`;
-        strategyStatus.style.color = '#34d399';
-      })
-      .catch(() => {
-        strategyStatus.innerText = 'Update failed';
-        strategyStatus.style.color = '#f87171';
-      });
+/* -------- STRATEGY -------- */
+const strategySelect = document.getElementById('strategySelect');
+const strategyStatus = document.getElementById('strategyStatus');
+
+fetch('/api/strategy')
+  .then(r => r.json())
+  .then(d => {
+    strategySelect.value = d.strategy;
+    strategyStatus.innerText = `Active: ${d.strategy.toUpperCase()}`;
+    strategyStatus.style.color = '#34d399';
+  });
+
+strategySelect.addEventListener('change', () => {
+  fetch('/api/strategy/set', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ strategy: strategySelect.value })
+  })
+  .then(r => r.json())
+  .then(d => {
+    strategyStatus.innerText = `Active: ${d.strategy.toUpperCase()}`;
+  });
+});
+
+/* -------- STEALTH -------- */
+const stealthList = document.getElementById('stealthList');
+
+fetch('/api/stealth')
+  .then(r => r.json())
+  .then(plugins => {
+    Object.entries(plugins).forEach(([name, enabled]) => {
+      const row = document.createElement('div');
+      row.className = 'toggle-row';
+
+      const label = document.createElement('span');
+      label.innerText = name.toUpperCase();
+
+      const toggle = document.createElement('input');
+      toggle.type = 'checkbox';
+      toggle.checked = enabled;
+
+      toggle.onchange = () => {
+        fetch('/api/stealth/set', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plugin: name, enabled: toggle.checked })
+        });
+      };
+
+      row.appendChild(label);
+      row.appendChild(toggle);
+      stealthList.appendChild(row);
     });
-  </script>
+  });
+
+/* -------- LIVE LOGS -------- */
+const logsBox = document.getElementById('logsBox');
+
+function fetchLogs() {
+  fetch('/api/logs')
+    .then(r => r.json())
+    .then(logs => {
+      logsBox.innerText = logs.join('\n');
+      logsBox.scrollTop = logsBox.scrollHeight;
+    });
+}
+
+setInterval(fetchLogs, 1500);
+fetchLogs();
+</script>
 </body>
 </html>

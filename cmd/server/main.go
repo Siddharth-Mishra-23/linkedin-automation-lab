@@ -10,17 +10,58 @@ import (
 	"github.com/Siddharth-Mishra-23/linkedin-automation-lab/internal/state"
 )
 
+/* ---------------- GLOBAL STATE ---------------- */
+
+// Strategy state
 var (
 	currentStrategy = "normal"
 	strategyMu      sync.Mutex
 )
 
+// Stealth plugin state
+var (
+	stealthMu sync.Mutex
+	stealthPlugins = map[string]bool{
+		"mouse":       true,
+		"timing":      true,
+		"fingerprint": true,
+		"scroll":      true,
+		"typing":      true,
+		"hover":       true,
+		"schedule":    true,
+		"ratelimit":   true,
+	}
+)
+
+// Live logs
+var (
+	logMu   sync.Mutex
+	logsBuf []string
+)
+
+/* ---------------- HELPERS ---------------- */
+
+func addLog(msg string) {
+	logMu.Lock()
+	defer logMu.Unlock()
+
+	if len(logsBuf) > 200 {
+		logsBuf = logsBuf[len(logsBuf)-200:]
+	}
+
+	logsBuf = append(logsBuf, msg)
+}
+
+/* ---------------- MAIN ---------------- */
+
 func main() {
 	fmt.Println("🌐 LinkedIn Automation Lab — Web Dashboard")
 	fmt.Println("Listening on http://localhost:8080")
 
+	addLog("Server started")
+
 	// -------------------------------------------------
-	// Persistent State Tracker (shared across API)
+	// Persistent State Tracker (STEP 7.3)
 	// -------------------------------------------------
 	stateTracker := state.New(20)
 
@@ -34,6 +75,7 @@ func main() {
 	// Health API
 	// -------------------------------------------------
 	http.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
+		addLog("Health check requested")
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]string{
 			"status": "ok",
@@ -44,18 +86,20 @@ func main() {
 	// Stats API (STEP 7.3)
 	// -------------------------------------------------
 	http.HandleFunc("/api/stats", func(w http.ResponseWriter, r *http.Request) {
+		addLog("Stats requested")
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(stateTracker.Snapshot())
 	})
 
 	// -------------------------------------------------
-	// Strategy API (STEP 7.4)
+	// Strategy APIs (STEP 7.4)
 	// -------------------------------------------------
 
 	// Get current strategy
 	http.HandleFunc("/api/strategy", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
+		addLog("Strategy fetched")
 
+		w.Header().Set("Content-Type", "application/json")
 		strategyMu.Lock()
 		defer strategyMu.Unlock()
 
@@ -66,8 +110,6 @@ func main() {
 
 	// Update strategy
 	http.HandleFunc("/api/strategy/set", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
@@ -93,10 +135,76 @@ func main() {
 		currentStrategy = body.Strategy
 		strategyMu.Unlock()
 
+		addLog("Strategy updated to " + body.Strategy)
+
+		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]string{
 			"status":   "updated",
 			"strategy": body.Strategy,
 		})
+	})
+
+	// -------------------------------------------------
+	// Stealth APIs (STEP 7.5)
+	// -------------------------------------------------
+
+	// Get stealth plugin states
+	http.HandleFunc("/api/stealth", func(w http.ResponseWriter, r *http.Request) {
+		addLog("Stealth plugins fetched")
+
+		w.Header().Set("Content-Type", "application/json")
+		stealthMu.Lock()
+		defer stealthMu.Unlock()
+
+		_ = json.NewEncoder(w).Encode(stealthPlugins)
+	})
+
+	// Toggle stealth plugin
+	http.HandleFunc("/api/stealth/set", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		var body struct {
+			Plugin  string `json:"plugin"`
+			Enabled bool   `json:"enabled"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		stealthMu.Lock()
+		defer stealthMu.Unlock()
+
+		if _, ok := stealthPlugins[body.Plugin]; !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		stealthPlugins[body.Plugin] = body.Enabled
+		addLog("Stealth plugin toggled: " + body.Plugin)
+
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"status":  "updated",
+			"plugin":  body.Plugin,
+			"enabled": body.Enabled,
+		})
+	})
+
+	// -------------------------------------------------
+	// Live Logs API (STEP 7.6)
+	// -------------------------------------------------
+	http.HandleFunc("/api/logs", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		logMu.Lock()
+		defer logMu.Unlock()
+
+		_ = json.NewEncoder(w).Encode(logsBuf)
 	})
 
 	// -------------------------------------------------
