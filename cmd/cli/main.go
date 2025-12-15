@@ -3,10 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-    "time"
+	"time"
 
 	"github.com/Siddharth-Mishra-23/linkedin-automation-lab/internal/browser"
+	"github.com/Siddharth-Mishra-23/linkedin-automation-lab/internal/scheduler"
+	"github.com/Siddharth-Mishra-23/linkedin-automation-lab/internal/state"
 	"github.com/Siddharth-Mishra-23/linkedin-automation-lab/internal/stealth"
+	"github.com/Siddharth-Mishra-23/linkedin-automation-lab/internal/strategy"
 )
 
 func main() {
@@ -15,10 +18,46 @@ func main() {
 
 	ctx := context.Background()
 
+	// -------------------------------------------------
+	// Strategy (Human Behavior Profile)
+	// -------------------------------------------------
+	profiles := strategy.PredefinedProfiles()
+	strategyEngine := strategy.NewDefaultEngine(profiles["normal"])
+	activeProfile := strategyEngine.Current()
+
+	fmt.Println("[Strategy] Active profile:", activeProfile.Name)
+
+	// -------------------------------------------------
+	// Scheduler (Business Hours Control)
+	// -------------------------------------------------
+	sched := scheduler.New(9, 18)
+	sched.WaitUntilAllowed()
+
+	// -------------------------------------------------
+	// State Tracking (Daily Limits)
+	// -------------------------------------------------
+	stateTracker := state.New(activeProfile.MaxActionsPerDay)
+
+	if !stateTracker.CanPerform() {
+		fmt.Println("[State] Daily action limit reached")
+		return
+	}
+
+	// Strategy-based delay before action
+	time.Sleep(activeProfile.MinDelay)
+	stateTracker.RecordAction()
+
+	// -------------------------------------------------
+	// Stealth Engine (Anti-Detection)
+	// -------------------------------------------------
 	stealthEngine := stealth.NewEngine()
+
+	// Mandatory stealth
 	stealthEngine.Register(&stealth.MouseMovementPlugin{})
 	stealthEngine.Register(&stealth.TimingPlugin{})
 	stealthEngine.Register(&stealth.FingerprintPlugin{})
+
+	// Advanced stealth
 	stealthEngine.Register(&stealth.ScrollPlugin{})
 	stealthEngine.Register(&stealth.TypingPlugin{})
 	stealthEngine.Register(&stealth.HoverPlugin{})
@@ -30,12 +69,14 @@ func main() {
 		Delay: 800 * time.Millisecond,
 	})
 
-
 	if err := stealthEngine.ApplyAll(ctx); err != nil {
 		fmt.Println("Stealth engine failed:", err)
 		return
 	}
 
+	// -------------------------------------------------
+	// Browser (Mock Implementation)
+	// -------------------------------------------------
 	br := &browser.MockBrowser{}
 
 	if err := br.Start(ctx); err != nil {
@@ -50,6 +91,9 @@ func main() {
 		return
 	}
 
+	// -------------------------------------------------
+	// Simulated Automation Flow
+	// -------------------------------------------------
 	page.Goto("https://www.linkedin.com/login")
 	page.Type("#username", "demo@example.com")
 	page.Type("#password", "********")
