@@ -3,51 +3,117 @@
 <head>
   <meta charset="UTF-8" />
   <title>LinkedIn Automation Lab</title>
+
   <style>
+    :root {
+      --neon-blue: #38bdf8;
+      --neon-purple: #a855f7;
+      --neon-green: #34d399;
+      --neon-red: #f87171;
+      --bg-dark: #020617;
+      --bg-panel: rgba(2,6,23,.88);
+    }
+
     body {
       margin: 0;
-      font-family: Inter, Arial, sans-serif;
-      background: radial-gradient(circle at top, #0f172a, #020617);
+      font-family: Inter, system-ui, sans-serif;
+      background: radial-gradient(circle at top, #0f172a, #020617 60%);
       color: #e5e7eb;
+      overflow-x: hidden;
     }
+
+    /* ---------------- HEADER ---------------- */
     header {
-      padding: 20px;
-      border-bottom: 1px solid #1f2933;
-      box-shadow: 0 0 20px rgba(56,189,248,.15);
+      padding: 22px 28px;
+      border-bottom: 1px solid #1f2937;
+      background: linear-gradient(
+        90deg,
+        rgba(56,189,248,.08),
+        rgba(168,85,247,.06)
+      );
+      box-shadow:
+        0 0 25px rgba(56,189,248,.15),
+        inset 0 0 40px rgba(168,85,247,.05);
     }
+
     h1 {
       margin: 0;
-      color: #38bdf8;
-      text-shadow: 0 0 12px rgba(56,189,248,.6);
+      font-size: 26px;
+      color: var(--neon-blue);
+      text-shadow:
+        0 0 8px rgba(56,189,248,.6),
+        0 0 18px rgba(56,189,248,.4);
+      animation: glowPulse 4s ease-in-out infinite;
     }
+
+    @keyframes glowPulse {
+      0%, 100% { text-shadow: 0 0 8px rgba(56,189,248,.6); }
+      50% { text-shadow: 0 0 22px rgba(56,189,248,.9); }
+    }
+
+    .badge {
+      margin-top: 6px;
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(6,95,70,.25);
+      color: var(--neon-green);
+      font-size: 12px;
+      box-shadow: 0 0 14px rgba(52,211,153,.45);
+    }
+
+    /* ---------------- LAYOUT ---------------- */
     .container {
-      padding: 24px;
+      padding: 28px;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 20px;
+      gap: 22px;
     }
+
     .card {
-      background: rgba(2,6,23,.85);
-      border: 1px solid #1f2937;
-      border-radius: 14px;
-      padding: 18px;
-      box-shadow: 0 0 30px rgba(168,85,247,.12);
+      background: var(--bg-panel);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid rgba(148,163,184,.15);
+      backdrop-filter: blur(10px);
+      box-shadow:
+        0 0 35px rgba(168,85,247,.15),
+        inset 0 0 20px rgba(56,189,248,.05);
+      transition: transform .3s ease, box-shadow .3s ease;
     }
+
+    .card:hover {
+      transform: translateY(-4px) scale(1.01);
+      box-shadow:
+        0 0 45px rgba(168,85,247,.35),
+        inset 0 0 25px rgba(56,189,248,.1);
+    }
+
     .card h3 {
       margin-top: 0;
-      color: #a855f7;
+      margin-bottom: 6px;
+      color: var(--neon-purple);
+      text-shadow: 0 0 10px rgba(168,85,247,.6);
     }
-    .badge {
-      display: inline-block;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: #022c22;
-      color: #34d399;
-      font-size: 12px;
-      box-shadow: 0 0 10px rgba(52,211,153,.4);
+
+    .stat {
+      font-size: 22px;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+
+    .pulse {
+      animation: pulse 2.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: .7; }
+      50% { opacity: 1; }
+      100% { opacity: .7; }
     }
   </style>
 </head>
+
 <body>
   <header>
     <h1>LinkedIn Automation Lab</h1>
@@ -57,28 +123,34 @@
   <div class="container">
     <div class="card">
       <h3>Status</h3>
-      <p id="status">Loading…</p>
+      <div id="status" class="stat pulse">Loading…</div>
     </div>
 
     <div class="card">
       <h3>Strategy</h3>
-      <p>Normal User</p>
+      <div class="stat">Normal User</div>
     </div>
 
     <div class="card">
       <h3>Stealth</h3>
-      <p>8 plugins enabled</p>
+      <div class="stat">8 Plugins Enabled</div>
     </div>
   </div>
 
   <script>
+    const statusEl = document.getElementById('status');
+
     fetch('/api/health')
-      .then(r => r.json())
-      .then(d => {
-        document.getElementById('status').innerText = d.status;
+      .then(res => res.json())
+      .then(data => {
+        statusEl.innerText = data.status.toUpperCase();
+        statusEl.style.color = '#34d399';
+        statusEl.style.textShadow = '0 0 12px rgba(52,211,153,.8)';
       })
       .catch(() => {
-        document.getElementById('status').innerText = 'offline';
+        statusEl.innerText = 'OFFLINE';
+        statusEl.style.color = '#f87171';
+        statusEl.style.textShadow = '0 0 12px rgba(248,113,113,.8)';
       });
   </script>
 </body>
