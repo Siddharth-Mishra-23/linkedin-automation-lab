@@ -83,7 +83,7 @@ func main() {
 	})
 
 	// -------------------------------------------------
-	// Stats API (STEP 7.3)
+	// Stats API
 	// -------------------------------------------------
 	http.HandleFunc("/api/stats", func(w http.ResponseWriter, r *http.Request) {
 		addLog("Stats requested")
@@ -92,14 +92,13 @@ func main() {
 	})
 
 	// -------------------------------------------------
-	// Strategy APIs (STEP 7.4)
+	// Strategy APIs
 	// -------------------------------------------------
 
-	// Get current strategy
 	http.HandleFunc("/api/strategy", func(w http.ResponseWriter, r *http.Request) {
 		addLog("Strategy fetched")
-
 		w.Header().Set("Content-Type", "application/json")
+
 		strategyMu.Lock()
 		defer strategyMu.Unlock()
 
@@ -108,7 +107,6 @@ func main() {
 		})
 	})
 
-	// Update strategy
 	http.HandleFunc("/api/strategy/set", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -145,21 +143,19 @@ func main() {
 	})
 
 	// -------------------------------------------------
-	// Stealth APIs (STEP 7.5)
+	// Stealth APIs
 	// -------------------------------------------------
 
-	// Get stealth plugin states
 	http.HandleFunc("/api/stealth", func(w http.ResponseWriter, r *http.Request) {
 		addLog("Stealth plugins fetched")
-
 		w.Header().Set("Content-Type", "application/json")
+
 		stealthMu.Lock()
 		defer stealthMu.Unlock()
 
 		_ = json.NewEncoder(w).Encode(stealthPlugins)
 	})
 
-	// Toggle stealth plugin
 	http.HandleFunc("/api/stealth/set", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -196,8 +192,9 @@ func main() {
 	})
 
 	// -------------------------------------------------
-	// Live Logs API (STEP 7.6)
+	// Live Logs API
 	// -------------------------------------------------
+
 	http.HandleFunc("/api/logs", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
@@ -208,7 +205,27 @@ func main() {
 	})
 
 	// -------------------------------------------------
+	// Export Logs API
+	// -------------------------------------------------
+
+	http.HandleFunc("/api/logs/export", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain")
+		w.Header().Set(
+			"Content-Disposition",
+			"attachment; filename=automation_logs.txt",
+		)
+
+		logMu.Lock()
+		defer logMu.Unlock()
+
+		for _, line := range logsBuf {
+			fmt.Fprintln(w, line)
+		}
+	})
+
+	// -------------------------------------------------
 	// Start Server
 	// -------------------------------------------------
+
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
