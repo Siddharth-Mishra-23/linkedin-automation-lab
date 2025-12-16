@@ -1,5 +1,13 @@
 🚀 LinkedIn Automation Lab
 
+## 🎥 Demo Video
+
+A short walkthrough demonstrating setup, execution, and key features of the LinkedIn Automation Lab:
+
+(https://drive.google.com/drive/folders/1j5UaaGjZFJgrzBSSiFqeG7lNVnhqIIDF?usp=sharing)
+
+
+
 ⚠️ Educational & Demonstration Purpose Only
 
 This project is a technical proof-of-concept built to demonstrate system design, browser automation architecture, runtime configuration, and observability.
